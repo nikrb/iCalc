@@ -75,18 +75,20 @@ class CalculatorBrain {
     
     // return has to be optional to cover misuse, e.g. + followed by evaluate
     func evaluate() -> Double? {
-        // setting a tuple (to a returned tuple.
+        // setting a tuple (to a returned tuple.)
         let (result, remainder) = evaluate( opStack)
         return result
     }
     
-    func pushOperand( operand:Double) {
+    func pushOperand( operand:Double) -> Double? {
         opStack.append( Op.Operand(operand))
+        return evaluate()
     }
     
-    func performOperation( symbol: String) {
+    func performOperation( symbol: String) -> Double? {
         if let operation = knownOps[symbol] {
             opStack.append(operation)
         }
+        return evaluate()
     }
 }

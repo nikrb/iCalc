@@ -13,6 +13,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var display: UILabel!
     
     var userIsTypingNumber = false
+    var brain = CalculatorBrain()
     
     @IBAction func appendDigit(sender: UIButton) {
         let digit = sender.currentTitle!
@@ -25,63 +26,25 @@ class ViewController: UIViewController {
     }
     
     @IBAction func operate(sender: UIButton) {
-        let operation = sender.currentTitle!
         if userIsTypingNumber {
             enter()
         }
-        /**
-            standford swift 2/17@34:55
-            let's get crazy
-            strictly speaking, performOperation form should be:
-            performOperation( { (op1:Double, op2:Double) -> Double in
-                return op1 * op2
-            })
-            Note the open brace has moved to the start and been replaced with 'in'
-            However:
-                swift knows the function signature, so we don't need the types,
-                note the return keyword has gone aswell as it's a one liner.
-            performOperation( { (op1,op2) in op1 * op2 })
-                next don't have to name arguments, so {$0 * $1} will suffice.
-                finally, last argument can go after the () and as there are no
-                args inside the (), we can drop them aswell:
-            performOperation { $0 * $1 }
-        */
-        switch operation {
-        case "✖️": performOperation { $0 * $1}
-        case "➗": performOperation { $1 / $0}
-        case "➕": performOperation { $0 + $1}
-        case "➖": performOperation { $1 - $0}
-        case "✔️": performOperation { sqrt($0)}
-            default: break
+        if let operation = sender.currentTitle {
+            if let result = brain.performOperation(operation) {
+                displayValue = result
+            } else {
+                displayValue = 0
+            }
         }
     }
-    func performOperation( operation: (Double, Double) -> Double){
-        if operandStack.count >= 2 {
-            displayValue = operation( operandStack.removeLast(), operandStack.removeLast())
-            enter()
-        }
-    }
-    // note once argument doesn't attract brackets
-    // oopsie here, object-c compiler complaint, fixes:
-    //    @objc(methodTow:)
-    //    func methodOne(par1) {...}
-    // or
-    //    @nonobjc
-    //    func methodOne() {...}
-    @nonobjc
-    func performOperation( operation: Double -> Double){
-        if operandStack.count >= 1 {
-            displayValue = operation( operandStack.removeLast())
-            enter()
-        }
-    }
-    
-    var operandStack = Array<Double>()
     
     @IBAction func enter() {
         userIsTypingNumber = false
-        operandStack.append( displayValue)
-        print( "operandStack : \(operandStack)")
+        if let result = brain.pushOperand( displayValue) {
+            displayValue = result
+        } else {
+            displayValue = 0
+        }
     }
     
     var displayValue: Double {
