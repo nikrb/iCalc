@@ -39,8 +39,15 @@ class CalculatorBrain {
     
     // called when: let brain = CalculatorBrain
     init(){
+        // provide a learn function for new ops and this simplifies init further
+        func learnOp( op: Op) {
+            knownOps[op.description] = op
+        }
+        // so just doing the first one
+        learnOp( Op.BinaryOperation( "✖️", *))
+        
         // we can simplify as * and + ARE functions, apparently, and the param order is not significant
-        knownOps["✖️"] = Op.BinaryOperation( "✖️", *)
+        // knownOps["✖️"] = Op.BinaryOperation( "✖️", *)
         knownOps["➗"] = Op.BinaryOperation( "➗") { $1 / $0 }
         knownOps["➕"] = Op.BinaryOperation( "➕", +)
         knownOps["➖"] = Op.BinaryOperation( "➖") { $1 - $0 }
