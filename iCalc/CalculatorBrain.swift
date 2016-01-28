@@ -9,10 +9,24 @@
 import Foundation
 
 class CalculatorBrain {
-    private enum Op {
+    private enum Op: CustomStringConvertible {
         case Operand(Double)
         case UnaryOperation( String, Double -> Double)
         case BinaryOperation( String, (Double, Double) -> Double)
+        
+        // computed properties only in a struct. No set function
+        var description: String {
+            get {
+                switch self {
+                case .Operand( let operand):
+                    return "\(operand)"
+                case .UnaryOperation(let symbol, _):
+                    return symbol
+                case .BinaryOperation(let symbol, _):
+                    return symbol
+                }
+            }
+        }
     }
     // var opStack = Array<Op>
     // preferred syntax
@@ -77,6 +91,7 @@ class CalculatorBrain {
     func evaluate() -> Double? {
         // setting a tuple (to a returned tuple.)
         let (result, remainder) = evaluate( opStack)
+        print( "\(opStack) = \(result) with \(remainder) left over")
         return result
     }
     
