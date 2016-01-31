@@ -11,7 +11,6 @@ import Foundation
 class CalculatorBrain {
     private enum Op: CustomStringConvertible {
         case Operand(Double)
-        case UnaryOperation( String, Double -> Double)
         case BinaryOperation( String, (Double, Double) -> Double)
         
         // computed properties only in a struct. No set function
@@ -20,8 +19,6 @@ class CalculatorBrain {
                 switch self {
                 case .Operand( let operand):
                     return "\(operand)"
-                case .UnaryOperation(let symbol, _):
-                    return symbol
                 case .BinaryOperation(let symbol, _):
                     return symbol
                 }
@@ -44,17 +41,10 @@ class CalculatorBrain {
             knownOps[op.description] = op
         }
         // so just doing the first one
-        learnOp( Op.BinaryOperation( "✖️", *))
-        
-        // we can simplify as * and + ARE functions, apparently, and the param order is not significant
-        // knownOps["✖️"] = Op.BinaryOperation( "✖️", *)
-        knownOps["➗"] = Op.BinaryOperation( "➗") { $1 / $0 }
-        knownOps["➕"] = Op.BinaryOperation( "➕", +)
-        knownOps["➖"] = Op.BinaryOperation( "➖") { $1 - $0 }
-        
-        // knownOps["✔️"] = Op.UnaryOperation("✔️") { sqrt( $0) }
-        // so, sqrt prototype takes single double and returns double, so ...
-        knownOps["✔️"] = Op.UnaryOperation("✔️", sqrt)
+        learnOp( Op.BinaryOperation( "*", *))
+        learnOp( Op.BinaryOperation( "/", /)) // { $1 / $0 })
+        learnOp( Op.BinaryOperation( "+", +))
+        learnOp( Op.BinaryOperation( "-", -)) // { $1 - $0 })
     }
     
     // recusively consume stack. operand return immediately, operator requires another recursion
@@ -68,18 +58,14 @@ class CalculatorBrain {
             // let op = ops.removeLast()
             // so to make ops mutable
             var remainingOps = ops
-            let op = remainingOps.removeLast()
+            let op = remainingOps.removeFirst()
+            print( "@evaluate thisOp[\(op)] remainingOps[\(remainingOps)]")
             switch op {
             case .Operand( let operand):
+                print("@evaluate Operand[\(operand)]")
                 return (operand, remainingOps)
-            // _ means I don't care
-            case .UnaryOperation( _, let operation):
-                let operandEvaluation = evaluate( remainingOps)
-                // if this fails it falls through to bottom return
-                if let operand = operandEvaluation.result {
-                    return (operation( operand), operandEvaluation.remainingOps )
-                }
-            case .BinaryOperation( _, let operation):
+            case .BinaryOperation( let tor, let operation):
+                print("@evaluate BinaryOp tor[\(tor)] op[\(operation)]")
                 let op1Evaluation = evaluate( remainingOps)
                 if let operand1 = op1Evaluation.result {
                     let op2Evaluation = evaluate( op1Evaluation.remainingOps)
@@ -87,7 +73,6 @@ class CalculatorBrain {
                         return (operation( operand1, operand2), op2Evaluation.remainingOps)
                     }
                 }
-            // no need for default as we handle every case
             }
         }
         // default return
@@ -96,10 +81,34 @@ class CalculatorBrain {
     
     // return has to be optional to cover misuse, e.g. + followed by evaluate
     func evaluate() -> Double? {
+        var last_operand:Double = 0
+        var last_op:Op? = nil
+        if( opStack.count > 0) {
+            for op in opStack {
+                switch op{
+                case .Operand(let operand):
+                    if (last_op == nil) {
+                        last_operand = operand
+                    } else {
+                        switch last_op! {
+                        case .BinaryOperation( _, let operation):
+                            last_operand = operation( last_operand, operand)
+                            last_op = nil
+                        default: break
+                        }
+
+                    }
+                case .BinaryOperation( _, _):
+                    last_op = op
+                }
+            }
+        }
+
+        print("opStack[\(opStack)]")
         // setting a tuple (to a returned tuple.)
-        let (result, remainder) = evaluate( opStack)
-        print( "\(opStack) = \(result) with \(remainder) left over")
-        return result
+        // let (result, remainder) = evaluate( opStack)
+        // print( "\(opStack) = \(result) with \(remainder) left over")
+        return last_operand
     }
     
     func pushOperand( operand:Double) -> Double? {

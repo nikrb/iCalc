@@ -10,11 +10,29 @@ import UIKit
 
 class ViewController: UIViewController {
 
+    var dot_used = false
     @IBOutlet weak var display: UILabel!
     
     var userIsTypingNumber = false
     var brain = CalculatorBrain()
     
+    @IBAction func clear() {
+        display.text = "0"
+        userIsTypingNumber = false
+        dot_used = false
+    }
+    
+    @IBAction func appendDot() {
+        if dot_used == false {
+            dot_used = true
+            if userIsTypingNumber {
+                display.text = display.text! + "."
+            } else {
+                display.text = "0."
+            }
+            userIsTypingNumber = true
+        }
+    }
     @IBAction func appendDigit(sender: UIButton) {
         let digit = sender.currentTitle!
         if userIsTypingNumber {
@@ -40,6 +58,7 @@ class ViewController: UIViewController {
     
     @IBAction func enter() {
         userIsTypingNumber = false
+        dot_used = false
         if let result = brain.pushOperand( displayValue) {
             displayValue = result
         } else {
@@ -55,16 +74,6 @@ class ViewController: UIViewController {
             display.text = "\(newValue)"
             userIsTypingNumber = false
         }
-    }
-    
-    override func viewDidLoad() {
-        super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
-    }
-
-    override func didReceiveMemoryWarning() {
-        super.didReceiveMemoryWarning()
-        // Dispose of any resources that can be recreated.
     }
 }
 
